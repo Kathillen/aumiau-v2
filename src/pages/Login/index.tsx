@@ -68,10 +68,10 @@ export default function Login() {
                 if (data.session) {
                     alert("Login realizado com sucesso!");
                     navigate("/home", {
-                        state: {
-                            selectedWeight
-                        }
-                    });
+                    state: {
+                        selectedWeight
+                    }
+                });
                 }
             }
 

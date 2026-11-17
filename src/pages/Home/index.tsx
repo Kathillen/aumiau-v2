@@ -7,6 +7,18 @@ import { supabase } from "../../lib/supabase"
 import { useLocation } from "react-router-dom";
 
 
+interface AgendamentoHistorico {
+    id: string;
+    data: string;
+    status: string;
+    pets: {
+        nome: string;
+    } | null;
+    agendamento_servico: {
+        valor_final: number;
+    }[];
+}
+
 export default function Home() {
 
     const [selectedWeight, setSelectedWeight] = useState("")
@@ -18,6 +30,9 @@ export default function Home() {
     const [petName, setPetName] = useState("");
     const [appointmentDate, setAppointmentDate] = useState("");
 
+    const [historico, setHistorico] = useState<AgendamentoHistorico[]>([]);
+    const [loadingHistorico, setLoadingHistorico] = useState(true);
+
     const navigate = useNavigate()
 
     const location = useLocation();
@@ -27,6 +42,51 @@ export default function Home() {
             setSelectedWeight(location.state.selectedWeight);
         }
     }, [location.state]);
+
+        useEffect(() => {
+            async function carregarHistorico() {
+                try {
+                    const {
+                        data: { session },
+                        error: authError
+                    } = await supabase.auth.getSession();
+                
+                    if (authError || !session) {
+                        setHistorico([]);
+                        return;
+                    }
+                
+                    const { data, error } = await supabase
+                        .from("agendamentos")
+                        .select(`
+                            id,
+                            data,
+                            status,
+                            pets (
+                                nome
+                            ),
+                            agendamento_servico (
+                                valor_final
+                            )
+                        `)
+                        .eq("id_usuario", session.user.id)
+                        .order("data", { ascending: false });
+                        
+                if (    error) {
+                        throw error;
+                    }
+                
+                    setHistorico((data || []) as unknown as AgendamentoHistorico[]);
+                
+                } catch (error) {
+                    console.error("Erro ao carregar histórico:", error);
+                } finally {
+                    setLoadingHistorico(false);
+                }
+            }
+        
+            carregarHistorico();
+        }, []);
 
     const prices = {
         pequeno: {
@@ -152,7 +212,7 @@ export default function Home() {
         {value:"pequeno", label:"Pequeno (até 10kg)"},
         {value:"medio", label:"Médio (10 a 25kg)"},
         {value:"grande", label:"Grande (25 a 40kg)"},
-        {value:"gigante", label:"Gigante (acima de 10kg)"},
+        {value:"gigante", label:"Gigante (acima de 40kg)"},
     ]
 
 
@@ -196,7 +256,80 @@ export default function Home() {
                 <p className="text-[18px] font-medium mt-[8px]">Faça uma simulação!</p>
             </span>
 
-            <div className="relative justify-center items-end w-[calc(100%-50px)] max-w-full mx-4 h-[20vh] left-4 top-100">
+            {/* HISTÓRICO DE AGENDAMENTOS */}
+            <section className="w-full px-5 mt-100 mb-12">
+
+                <h2 className="text-2xl font-bold text-[#25253D] mb-2">
+                    Histórico de agendamentos
+                </h2>
+
+                <p className="text-sm text-gray-500 mb-5">
+                    Confira os atendimentos realizados e agendados.
+                </p>
+
+                <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+
+                    {loadingHistorico ? (
+                        <p className="text-center p-6 text-gray-500">
+                            Carregando histórico...
+                        </p>
+                    ) : historico.length === 0 ? (
+                        <p className="text-center p-6 text-gray-500">
+                            Você ainda não possui agendamentos.
+                        </p>
+                    ) : (
+                        <div className="overflow-x-auto">
+                        
+                            <table className="w-full text-sm text-left">
+                    
+                                <thead className="bg-[#9238F5] text-white">
+                                    <tr>
+                                        <th className="p-3">Pet</th>
+                                        <th className="p-3">Data</th>
+                                        <th className="p-3">Valor</th>
+                                    </tr>
+                                </thead>
+                    
+                                <tbody>
+                                    {historico.map((agendamento) => {
+                                        const valorTotal =
+                                            agendamento.agendamento_servico?.reduce(
+                                                (total, servico) =>
+                                                    total + Number(servico.valor_final),
+                                                0
+                                            ) || 0;
+                                        
+                                        return (
+                                            <tr
+                                                key={agendamento.id}
+                                                className="border-b border-gray-200 last:border-0"
+                                            >
+                                                <td className="p-3 font-semibold text-[#25253D]">
+                                                    {agendamento.pets?.nome || "Não informado"}
+                                                </td>
+                                        
+                                                <td className="p-3 text-gray-600 whitespace-nowrap">
+                                                    {new Date(agendamento.data).toLocaleDateString("pt-BR")}
+                                                </td>
+                                        
+                                                <td className="p-3 font-bold text-[#9238F5] whitespace-nowrap">
+                                                    R$ {valorTotal.toFixed(2).replace(".", ",")}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                                
+                            </table>
+                                
+                        </div>
+                    )}
+
+                </div>
+                
+            </section>
+
+            <div className="relative justify-center items-end w-[calc(100%-50px)] max-w-full mx-4 h-[20vh] left-4 top-40">
                 <select
                     className="w-full p-3 border border-gray-300 rounded-lg outline-none"
                     value={selectedWeight}

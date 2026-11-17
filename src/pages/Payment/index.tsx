@@ -1,7 +1,10 @@
-
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import qrCode from "../../assets/qrCode.png"
+import qrCode from "../../assets/image.png";
+
+import { supabase } from "../../lib/supabase"
+import { createAppointment } from "../../services/appointmentsService";
+import { confirmPayment } from "../../services/paymentsService";
 
 interface Agendamento {
     petName: string;
@@ -33,31 +36,74 @@ export default function Pagamentos() {
         gigante: "Gigante"
     };
 
+    const weightValues: Record<string, number> = {
+        pequeno: 5,
+        medio: 17,
+        grande: 32,
+        gigante: 45
+    };
+    
     async function handlePaymentCompleted() {
-        if (!agendamento) {
-            alert("Não foram encontradas informações do agendamento.");
+    if (!agendamento) {
+        alert("Não foram encontradas informações do agendamento.");
+        return;
+    }
+
+    setLoading(true);
+
+    try {
+        const {
+            data: { session },
+            error
+        } = await supabase.auth.getSession();
+
+        if (error || !session) {
+            alert("Você precisa estar logado para continuar.");
+            navigate("/login");
             return;
         }
 
-        setLoading(true);
+        const dadosAgendamento = {
+            pet: {
+                nome: agendamento.petName,
+                peso: weightValues[agendamento.selectedWeight],
+                porte: agendamento.selectedWeight
+            },
+            data: new Date(
+                agendamento.appointmentDate
+            ).toISOString(),
+            servicos: agendamento.selectedServices
+        };
 
-        try {
-            // TODO: chamar aqui a função do backend Python
-            // para registrar o agendamento no banco de dados.
+        const resultado = await createAppointment(
+            dadosAgendamento,
+            session.access_token
+        );
 
-            alert("Pagamento simulado com sucesso!");
+        const appointmentId = resultado.agendamento.id;
 
-            // Depois que o backend confirmar o registro,
-            // redireciona para a tela de confirmação.
-            navigate("/home");
+        await confirmPayment(
+            appointmentId,
+            session.access_token
+        );
 
-        } catch (error) {
-            console.error("Erro ao registrar agendamento:", error);
-            alert("Não foi possível registrar seu agendamento.");
-        } finally {
-            setLoading(false);
-        }
+        alert("Agendamento registrado com sucesso!");
+        navigate("/home");
+
+    } catch (error) {
+        console.error("Erro ao finalizar agendamento:", error);
+
+        alert(
+            error instanceof Error
+                ? error.message
+                : "Não foi possível registrar seu agendamento."
+        );
+    } finally {
+        setLoading(false);
     }
+    }
+
+
 
     if (!agendamento) {
         return (
