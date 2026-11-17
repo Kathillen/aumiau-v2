@@ -157,39 +157,46 @@ export default function Home() {
 
 
     return (
-        <main className="min-h-screen flex flex-col bg-white w-full font-nunito">
+        <main className="min-h-screen flex flex-col bg-white w-full max-w-full overflow-x-hidden font-nunito">
 
             <img className="w-[120px] absolute left-1/2 -rotate-30 top-10" src={patinha}/>
 
-            <span className=" relative justify-center text-[30px] font-semibold items-end w-[70%] h-[20vh] left-4 top-4">
+            <span className=" relative justify-center text-[30px] font-semibold items-end w-[calc(100%-32px)] max-w-full mx-4 h-[20vh] left-4 top-4">
                 <p className="">Seja bem-vindo(a)</p>
                 <p className=" text-[#8A38F5] ">em nosso <br/> petshop!</p>
             </span>
 
             <img className="w-[120px] absolute right-2 top-52 -rotate-30" src={patinha}/>
 
-            <span className=" relative justify-center text-[30px] font-semibold items-end w-[80%] h-[20vh] top-10">
-                <img className="w-[380px]" src={manDog}/>
+            <span className=" relative justify-center text-[30px] font-semibold items-end w-[calc(100%-32px)] max-w-full h-[20vh] top-10">
+                <img className="w-full max-w-[380px] object-contain" src={manDog}/>
             </span>
             
             <p className=" absolute text-[18px] top-146  left-4">Onde o seu melhor amigo recebe o<br/> cuidado que ele merece, com todo o <br/>amor e segurança.</p>
 
             <img className="w-[120px] absolute right-4 top-148 rotate-30" src={patinha}/>
 
-            <div className="relative w-[800px] h-[80vh] top-100">
-                <div className="relative z-0 bg-[#8A38F5] w-[260px] h-[260px] rounded-full  left-32"/>
-                <img className=" absolute z-20 w-[360px] h-[380px] rounded-full top-20  left-6" src={cachorroMolhado}/>
-                <div className="relative z-0 border-[#8A38F5]  border-6 bg-[#FFFFFF] w-[260px] h-[260px] rounded-full  left-2"/>
+            <div className="relative w-full max-w-full h-[80vh] top-100 flex justify-center overflow-hidden">
+
+            <div className="absolute z-0 bg-[#8A38F5] w-[220px] h-[220px] rounded-full top-0 right-4"/>
+
+            <img
+                className="absolute z-20 w-[85%] max-w-[340px] h-[350px] object-cover rounded-full top-16"
+                src={cachorroMolhado}
+            />
+
+            <div className="absolute z-0 border-[#8A38F5] border-6 bg-white w-[220px] h-[220px] rounded-full bottom-20 left-4"/>
+
             </div>
 
             <img className="w-[120px] absolute right-4 top-348 -rotate-30" src={patinha}/>
 
-            <span className=" relative justify-center  items-end w-[70%] h-[20vh] left-4 top-100">
+            <span className=" relative justify-center  items-end w-[calc(100%-32px)] max-w-full mx-4 h-[20vh] left-4 top-100">
                 <p className="text-[20px] font-semibold">Venha conhecer nossos serviços e veja como é fácil<br/> agendar</p>
                 <p className="text-[18px] font-medium mt-[8px]">Faça uma simulação!</p>
             </span>
 
-            <div className="relative justify-center items-end w-[70%] h-[20vh] left-4 top-100">
+            <div className="relative justify-center items-end w-[calc(100%-50px)] max-w-full mx-4 h-[20vh] left-4 top-100">
                 <select
                     className="w-full p-3 border border-gray-300 rounded-lg outline-none"
                     value={selectedWeight}
@@ -206,11 +213,11 @@ export default function Home() {
                     ))}
                 </select>
 
-                <div className="  mt-[32px] border-2 border-dashed rounded-[24px] border-gray-300 h-[56vh] w-[90vw]">
+                <div className="mt-[32px] border-2 border-dashed rounded-[24px] border-gray-300 min-h-[56vh] w-full max-w-full">
                     <p className="relative p-4 font-semibold text-[22px]" >{selectedWeight === "" ? "Aguardando..." : "Sumário de Preços"}</p>
                     
-                    <div className=' p-4 grid grid-cols-[210px_1fr]'>
-                        <span className="text-[22px]">
+                    <div className="p-3 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-2">
+                        <span className="text-[18px]">
                             {[
                                 { name: "Banho", key: "banho" },
                                 { name: "Tosa", key: "tosa" },
@@ -236,7 +243,7 @@ export default function Home() {
                                 "transporte",
                             ].map((service) => (
                                 <div key={service} className="mb-12 mt-2 h-[40px] w-full">
-                                    <div className="font-semibold rounded-[20px] text-[22px] size-full flex items-center justify-center text-center bg-[#c395ff] text-[#8A38F5]">
+                                    <div className="font-semibold rounded-[20px] text-[16px] sm:text-[20px] size-full flex items-center justify-center text-center bg-[#c395ff] text-[#8A38F5]">
                                         R$ {selectedPrices
                                             ? selectedPrices[service as keyof typeof selectedPrices].price.toFixed(2).replace(".", ",")
                                             : "--,--"}  {/*
