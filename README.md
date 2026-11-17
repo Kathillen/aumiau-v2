@@ -104,3 +104,8 @@ O frontend está hospedado na Vercel.
 ## Observações
 
 O pagamento via PIX possui caráter de simulação. Nenhuma cobrança financeira real é realizada pelo sistema.
+
+
+DOCUMENTAÇÃO:
+https://docs.google.com/document/d/1gV6M4zQLlUmGyjDaYO2miUuS-Rh_RcQBVn5p3bW9La0/edit?usp=sharing
+
