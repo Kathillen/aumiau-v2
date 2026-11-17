@@ -1,9 +1,11 @@
 import manDog from "../../assets/man-dog.png"
 import patinha from "../../assets/Patinha.png"
 import cachorroMolhado from "../../assets/cachorro-molhado.png"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { supabase } from "../../lib/supabase"
+import { useLocation } from "react-router-dom";
+
 
 export default function Home() {
 
@@ -17,6 +19,14 @@ export default function Home() {
     const [appointmentDate, setAppointmentDate] = useState("");
 
     const navigate = useNavigate()
+
+    const location = useLocation();
+
+    useEffect(() => {
+        if (location.state?.selectedWeight) {
+            setSelectedWeight(location.state.selectedWeight);
+        }
+    }, [location.state]);
 
     const prices = {
         pequeno: {
@@ -162,7 +172,7 @@ export default function Home() {
                 <img className="w-[380px]" src={manDog}/>
             </span>
             
-            <p className=" absolute text-[18px] top-142  left-4">Onde o seu melhor amigo recebe o<br/> cuidado que ele merece, com todo o <br/>amor e segurança.</p>
+            <p className=" absolute text-[18px] top-146  left-4">Onde o seu melhor amigo recebe o<br/> cuidado que ele merece, com todo o <br/>amor e segurança.</p>
 
             <img className="w-[120px] absolute right-4 top-148 rotate-30" src={patinha}/>
 
@@ -242,7 +252,9 @@ export default function Home() {
 
             <img className="w-[120px] absolute left-4 top-480 rotate-30" src={patinha}/>
 
-            <div className="w-full left-24 h-[42px] absolute top-510 ">
+            
+            {/* Botão de agendamento */}
+            <div className="w-full flex justify-center mt-200 mb-8">
                 <button
                     disabled={!selectedWeight}
                     onClick={openScheduling}
@@ -259,12 +271,195 @@ export default function Home() {
                 </button>
             </div>
 
+            {/* Rodapé */}
+            <div className="w-full min-h-[12vh] bg-[#8A38F5] mt-auto">
                 
-            
-
-            <div className="absolute  top-530 h-[12vh] w-full bg-[#8A38F5]">
-
             </div>
+
+            
+            {showScheduling && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                
+                    <div className="relative bg-white w-full max-w-md min-h-[580px] max-h-[90vh] rounded-xl p-5 flex flex-col">
+            
+                        {/* Fechar modal */}
+                        <button
+                            onClick={() => setShowScheduling(false)}
+                            className="absolute right-5 top-5 text-2xl text-[#25253D]"
+                        >
+                            ×
+                        </button>
+            
+                        {/* Cabeçalho */}
+                        <h2 className="text-2xl font-bold text-[#25253D] mb-3">
+                            Agendar<br />Atendimento
+                        </h2>
+            
+                        <p className="text-xs mb-5">
+                            Porte selecionado:{" "}
+                            <strong>
+                                {weight.find(item => item.value === selectedWeight)?.label}
+                            </strong>
+                            <span className="text-green-500 ml-2">✓</span>
+                        </p>
+            
+                        {/* Progresso */}
+                        <div className="flex items-center justify-between mb-6">
+                            {[1, 2, 3, 4].map((step) => (
+                                <div
+                                    key={step}
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
+                                        ${currentStep >= step
+                                            ? "bg-green-400 text-white"
+                                            : "bg-gray-300 text-white"
+                                        }`}
+                                >
+                                    {currentStep > step ? "✓" : step}
+                                </div>
+                            ))}
+                        </div>
+                        
+                        {/* CONTEÚDO DAS ETAPAS */}
+                        <div className="flex-1 overflow-y-auto">
+                        
+                            {/* ETAPA 1 - SERVIÇOS */}
+                            {currentStep === 1 && (
+                                <div className="border-2 border-gray-300 rounded-lg p-3">
+                                
+                                    {services.map((service) => {
+                                        const price = selectedPrices?.[
+                                            service.key as keyof typeof selectedPrices
+                                        ];
+                                    
+                                        return (
+                                            <label
+                                                key={service.key}
+                                                className="flex items-center justify-between border-b border-gray-300 py-4 last:border-0 cursor-pointer"
+                                            >
+                                                <div>
+                                                    <p className="font-bold text-[#536071]">
+                                                        {service.name}
+                                                    </p>
+                                        
+                                                    <p className="text-xs text-gray-500">
+                                                        {price?.time} min
+                                                    </p>
+                                                </div>
+                                        
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm">
+                                                        R$ {price?.price.toFixed(2).replace(".", ",")}
+                                                    </span>
+                                        
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedServices.includes(service.key)}
+                                                        onChange={() => toggleService(service.key)}
+                                                        className="accent-[#9238F5] w-4 h-4"
+                                                    />
+                                                </div>
+                                            </label>
+                                        );
+                                    })}
+
+                                    <p className="text-sm font-bold text-[#8A38F5] mt-4">
+                                        Total: R$ {totalPrice.toFixed(2).replace(".", ",")}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* ETAPA 2 - NOME DO PET */}
+                            {currentStep === 2 && (
+                                <div>
+                                    <label className="block font-semibold mb-2">
+                                        Qual é o nome do seu pet?
+                                    </label>
+                            
+                                    <input
+                                        type="text"
+                                        value={petName}
+                                        onChange={(e) => setPetName(e.target.value)}
+                                        placeholder="Digite o nome do seu pet"
+                                        className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:border-purple-500"
+                                    />
+                                </div>
+                            )}
+
+                            {/* ETAPA 3 - DATA */}
+                            {currentStep === 3 && (
+                                <div>
+                                    <label className="block font-semibold mb-2">
+                                        Escolha a data do atendimento
+                                    </label>
+                            
+                                    <input
+                                        type="date"
+                                        value={appointmentDate}
+                                        onChange={(e) => setAppointmentDate(e.target.value)}
+                                        min={new Date().toISOString().split("T")[0]}
+                                        className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:border-purple-500"
+                                    />
+                                </div>
+                            )}
+
+                            {/* ETAPA 4 - RESUMO */}
+                            {currentStep === 4 && (
+                                <div className="border border-gray-300 rounded-lg p-4 space-y-3">
+                                    <h3 className="font-bold text-lg">
+                                        Resumo do agendamento
+                                    </h3>
+                            
+                                    <p>Pet: <strong>{petName}</strong></p>
+                            
+                                    <p>
+                                        Porte: <strong>{weight.find(item => item.value === selectedWeight)?.label}</strong>
+                                    </p>
+                            
+                                    <p>
+                                        Data: <strong>{appointmentDate}</strong>
+                                    </p>
+                            
+                                    <div>
+                                        <p className="font-semibold">Serviços:</p>
+                                        {selectedServices.map(service => (
+                                            <p key={service}>
+                                                {services.find(item => item.key === service)?.name}
+                                            </p>
+                                        ))}
+                                    </div>
+                                    
+                                    <p className="text-[#8A38F5] font-bold text-lg">
+                                        Total: R$ {totalPrice.toFixed(2).replace(".", ",")}
+                                    </p>
+                                </div>
+                            )}
+
+                        </div>
+                        
+                        <div className="flex gap-3 mt-6">
+                        
+                            <button
+                                type="button"
+                                onClick={previousStep}
+                                disabled={currentStep === 1}
+                                className="flex-1 border-2 border-[#536071] rounded-lg p-3 font-bold disabled:opacity-40"
+                            >
+                                Voltar
+                            </button>
+                        
+                            <button
+                                type="button"
+                                onClick={currentStep === 4 ? goToPayment : nextStep}
+                                className="flex-1 bg-[#9238F5] text-white rounded-lg p-3 font-bold"
+                            >
+                                {currentStep === 4 ? "Ir para pagamento" : "Avançar"}
+                            </button>
+                        
+                        </div>
+                        
+                    </div>
+                </div>
+            )}
 
         </main>
     );

@@ -20,7 +20,7 @@ export default function App() {
                     <Route path="/login" element={<Login />} />
 
                     <Route element={<ProtectedRoute />}>
-                        <Route path="/pagamentos" element={<Pagamentos />} />
+                        <Route path="/pagamento" element={<Pagamentos />} />
                     </Route>
 
                     <Route path="*" element={<Navigate to="/" replace />} />

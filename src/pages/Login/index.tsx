@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function Login() {
     const [isRegister, setIsRegister] = useState(false);
@@ -9,7 +10,13 @@ export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
+    const navigate = useNavigate()
+
     const [loading, setLoading] = useState(false);
+
+    const location = useLocation();
+
+    const selectedWeight = location.state?.selectedWeight;
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -28,34 +35,44 @@ export default function Login() {
 
         try {
             if (isRegister) {
-                const { data, error } = await supabase.auth.signUp({
-                    email,
-                    password,
-                    options: {
-                        data: {
-                            full_name: fullName
-                        },
-                        emailRedirectTo: window.location.origin
+                    const { data, error } = await supabase.auth.signUp({
+                        email,
+                        password,
+                        options: {
+                            data: {
+                                full_name: fullName
+                            }
+                        }
+                    });
+                
+                    if (error) throw error;
+                
+                    if (data.session) {
+                        alert("Conta criada com sucesso!");
+                        navigate("/home", {
+                            state: {
+                                selectedWeight
+                            }
+                        });
+                    } else {
+                        alert("Conta criada, mas é necessário confirmar o e-mail.");
                     }
-                });
-
-                if (error) throw error;
-
-                if (data.session) {
-                    alert("Conta criada com sucesso!");
                 } else {
-                    alert("Conta criada! Verifique seu e-mail para confirmar o cadastro.");
-                }
-
-            } else {
-                const { error } = await supabase.auth.signInWithPassword({
+                const { data, error } = await supabase.auth.signInWithPassword({
                     email,
                     password
                 });
 
                 if (error) throw error;
 
-                alert("Login realizado com sucesso!");
+                if (data.session) {
+                    alert("Login realizado com sucesso!");
+                    navigate("/home", {
+                        state: {
+                            selectedWeight
+                        }
+                    });
+                }
             }
 
         } catch (error) {
